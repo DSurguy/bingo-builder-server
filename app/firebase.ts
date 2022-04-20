@@ -15,7 +15,6 @@ const getFirebaseApp = (): Promise<FirebaseApp> => {
 
     firebasePromise = new Promise<FirebaseApp>((resolve, reject) => {
       try {
-        console.log(firebaseConfig.apiKey);
         const app = initializeApp(firebaseConfig);
         resolve(app);
       } catch (e) {

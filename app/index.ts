@@ -1,9 +1,11 @@
+import got from 'got';
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
+import { getAuth } from 'firebase-admin/auth'
 import configureEnv from './configureEnv';
-import getFirebaseApp from './firebase';
+import authRouter from './authRouter';
+import getFirebaseService from './firebaseService';
 
 configureEnv();
 
@@ -20,18 +22,69 @@ app.get("/health", openCors, (req, res, next) => {
   next();
 });
 
+app.options("/auth/createUser", bingoClientCors);
 app.post("/auth/createUser", bingoClientCors, jsonParser, async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    if( !email || !password ) return res.status(400);
-    const auth = getAuth(await getFirebaseApp());
-    const user = await createUserWithEmailAndPassword(auth, email, password);
-    signOut(auth);
+    const { email, password, captchaToken } = req.body;
+    
+    if( 
+      !email ||
+      !password ||
+      !captchaToken ||
+      typeof email !== 'string' ||
+      typeof password !== 'string' ||
+      typeof captchaToken !== 'string'
+    ) {
+      res.sendStatus(400);
+      next();
+      return;
+    }
+    
+    const captchaResponse = await got.post('https://www.google.com/recaptcha/api/siteverify', {
+      json: {
+        secret: process.env.GOOGLE_RECAPTCHA_KEY,
+        response: captchaToken,
+        remoteip: req.ip
+      }
+    }).json<{
+      "success": boolean;
+      "challenge_ts": string; // timestamp of the challenge load (ISO format yyyy-MM-dd'T'HH:mm:ssZZ)
+      "hostname": string; // the hostname of the site where the reCAPTCHA was solved
+      "error-codes"?: string[]; // optional
+    }>();
+
+    if( !captchaResponse.success ) {
+      res.sendStatus(401);
+      next();
+      return;
+    }
+    
+    const auth = getAuth(await getFirebaseService());
+    await auth.createUser({
+      email,
+      password,
+      emailVerified: false,
+    });
     res.sendStatus(200);
   } catch (e) {
     console.error("Error creating user", e);
     res.sendStatus(500);
   }
+  next();
+});
+
+authRouter.options("/auth/deleteUserData", bingoClientCors);
+authRouter.post("/auth/deleteUserData", bingoClientCors, async (req, res, next) => {
+  res.sendStatus(200);
+})
+
+authRouter.options("/auth/exportUserData", bingoClientCors);
+authRouter.post("/auth/exportUserData", bingoClientCors, async (req, res, next) => {
+  res.sendStatus(200);
+})
+
+app.use(authRouter, (req, res, next) => {
+  res.sendStatus(401);
   next();
 });
 

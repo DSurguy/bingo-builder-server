@@ -11,4 +11,7 @@ export default function configureEnv() {
   if( realEnvError ) {
     console.log("dotenv - Unable to load .env", realEnvError);
   }
+
+  //Load firebase SDK
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = resolve(__dirname, '../keys/firebaseService.json');
 }

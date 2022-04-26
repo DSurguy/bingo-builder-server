@@ -3,9 +3,9 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { getAuth } from 'firebase-admin/auth'
-import configureEnv from './configureEnv';
-import authRouter from './authRouter';
-import getFirebaseService from './firebaseService';
+import configureEnv from './configureEnv.js';
+import authRouter from './authRouter.js';
+import getFirebaseService from './firebaseService.js';
 
 configureEnv();
 
@@ -55,8 +55,7 @@ app.post("/auth/createUser", bingoClientCors, jsonParser, async (req, res, next)
 
     if( !captchaResponse.success ) {
       res.sendStatus(401);
-      next();
-      return;
+      return next();
     }
     
     const auth = getAuth(await getFirebaseService());

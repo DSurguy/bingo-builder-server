@@ -1,13 +1,17 @@
-const dotenv = require("dotenv");
-import { resolve } from 'path';
+import dotenv from "dotenv";
+import { fileURLToPath } from 'url';
+import { resolve, dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default function configureEnv() {
-  const { localDotEnvError } = dotenv.config({ path: resolve(__dirname, '../.env.local') });
+  const { error: localDotEnvError } = dotenv.config({ path: resolve(__dirname, '../.env.local') });
   if( localDotEnvError ) {
     console.log("dotenv - Unable to load .env.local", localDotEnvError);
   }
 
-  const { realEnvError } = dotenv.config({ path: resolve(__dirname, '../.env')});
+  const { error: realEnvError } = dotenv.config({ path: resolve(__dirname, '../.env')});
   if( realEnvError ) {
     console.log("dotenv - Unable to load .env", realEnvError);
   }

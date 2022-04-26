@@ -1,6 +1,6 @@
 import express, { RequestHandler } from 'express';
 import { getAuth as serviceGetAuth } from 'firebase-admin/auth';
-import getFirebaseService from './firebaseService';
+import getFirebaseService from './firebaseService.js';
 
 const authMiddleware: RequestHandler = async (req, res, next) => {
   try {

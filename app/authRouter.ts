@@ -4,15 +4,15 @@ import getFirebaseService from './firebaseService.js';
 
 const authMiddleware: RequestHandler = async (req, res, next) => {
   try {
-    const authHeader = res.getHeader('Authorization')?.toString();
-    if( !authHeader ) return next('router');
+    const authHeader = req.headers['authorization']?.toString();
+    if( !authHeader ) return next("Missing Authorizationn");
     const token = await serviceGetAuth(
       await getFirebaseService()
-    ).verifyIdToken(authHeader)
+    ).verifyIdToken(authHeader.replace(/^Bearer\s+/, ""))
     res.locals.userId = token.uid;
     next();
   } catch (e) {
-    return next('router');
+    return next("Invalid Authorization");
   }
 }
 const authenticatedRouter = express.Router();

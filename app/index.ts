@@ -22,8 +22,8 @@ app.get("/health", openCors, (req, res, next) => {
   next();
 });
 
-app.options("/auth/createUser", bingoClientCors);
-app.post("/auth/createUser", bingoClientCors, jsonParser, async (req, res, next) => {
+app.options("/createUser", bingoClientCors);
+app.post("/createUser", bingoClientCors, jsonParser, async (req, res, next) => {
   try {
     const { email, password, captchaToken } = req.body;
     
@@ -72,20 +72,20 @@ app.post("/auth/createUser", bingoClientCors, jsonParser, async (req, res, next)
   next();
 });
 
-authRouter.options("/auth/deleteUserData", bingoClientCors);
-authRouter.post("/auth/deleteUserData", bingoClientCors, async (req, res, next) => {
-  res.sendStatus(200);
-})
-
-authRouter.options("/auth/exportUserData", bingoClientCors);
-authRouter.post("/auth/exportUserData", bingoClientCors, async (req, res, next) => {
-  res.sendStatus(200);
-})
-
-app.use(authRouter, (req, res, next) => {
-  res.sendStatus(401);
+app.get("/auth/health", openCors, authRouter, (req, res, next) => {
+  res.status(200).send("OK");
   next();
-});
+})
+
+authRouter.post("/deleteUserData", async (req, res, next) => {
+  res.sendStatus(200);
+})
+
+authRouter.post("/exportUserData", async (req, res, next) => {
+  res.sendStatus(200);
+})
+
+app.use("/auth", bingoClientCors, authRouter);
 
 app.use((req, res, next) => {
   console.log(`${res.statusCode} ${req.method} ${req.path}`);

@@ -17,8 +17,14 @@ const jsonParser = bodyParser.json();
 
 const app = express();
 
-app.get("/health", openCors, (req, res, next) => {
-  res.status(200).send("OK");
+app.get("/health", openCors, async (req, res, next) => {
+  try {
+    const auth = getAuth(await getFirebaseService());
+    if( auth ) res.status(200).send("OK");
+    else res.status(500).send("NO AUTH");
+  } catch (e) {
+    res.status(500).send("ERROR");
+  }
   next();
 });
 

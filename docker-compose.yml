@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  bingo-server:
+    build: ./api.Dockerfile
+    ports: 3010:3010
+  bingo-db:
+    image: postgres:14-alpine
+    volumes:
+      - "${DB_PATH}:/var/lib/postgresql/data"
+  bingo-nginx:
+    image: nginx:mainline-alpine
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped
+    volumes:
+      - ./nginx/conf/:/etc/nginx/conf.d/:ro
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+  bingo-certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email ${CERTBOT_EMAIL} -d ${APP_HOST} --agree-tos

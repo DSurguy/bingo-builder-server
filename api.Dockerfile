@@ -9,7 +9,7 @@ FROM node:16-alpine
 COPY --from=BUILD_IMAGE /usr/src/app/dist ./dist
 COPY --from=BUILD_IMAGE /usr/src/app/package* .
 COPY keys ./keys
-COPY .env.local .
+COPY .env .
 RUN npm ci --only=production \
   && rm -r node_modules/@firebase/firestore \
   && rm -r node_modules/@firebase/firestore-compat \

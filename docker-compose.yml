@@ -2,29 +2,61 @@ version: '3'
 
 services:
   bingo-server:
-    build: ./api.Dockerfile
-    ports: 3010:3010
+    container_name: bingo-server
+    image: bingo-server
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./api.Dockerfile
+    ports:
+      - 3010:3010
+    networks:
+      - bingo-net
   bingo-db:
+    container_name: bingo-db
     image: postgres:14-alpine
+    restart: unless-stopped
     volumes:
       - "${DB_PATH}:/var/lib/postgresql/data"
     environment:
       - POSTGRES_USER="${DB_USER}"
       - POSTGRES_PASSWORD="${DB_PASSWORD}"
-    ports: 5432:5432
+    ports:
+      - 5432:5432
+    networks:
+      - bingo-net
   bingo-nginx:
+    container_name: bingo-nginx
     image: nginx:mainline-alpine
+    depends_on:
+      - bingo-server
+    restart: unless-stopped
+    volumes:
+      - web-root:/var/www/html
+      - ./nginx/:/etc/nginx/conf.d/:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
     ports:
       - 80:80
       - 443:443
-    restart: unless-stopped
-    volumes:
-      - ./nginx.conf/:/etc/nginx/conf.d/:ro
-      - ./runtimeInfra/certbot/www:/var/www/certbot/:ro
-      - ./runtimeInfra/certbot/conf/:/etc/nginx/ssl/:ro
+    networks:
+      - bingo-net
   bingo-certbot:
+    container_name: bingo-certbot
     image: certbot/certbot:latest
+    depends_on:
+      - bingo-nginx
     volumes:
-      - ./runtimeInfra/certbot/www/:/var/www/certbot/:rw
-      - ./runtimeInfra/certbot/conf/:/etc/letsencrypt/:rw
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email ${CERTBOT_EMAIL} -d ${APP_HOST} --agree-tos
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    command: certonly --webroot -w /var/www/html --email ${CERTBOT_EMAIL} -d ${APP_HOST} --staging --agree-tos
+
+volumes:
+  certbot-etc:
+  certbot-var:
+  webroot:
+
+networks:
+  bingo-net:
+    driver: bridge

@@ -2,5 +2,8 @@ node_modules
 .DS_Store
 dist
 *.local
+.env*
 keys
 testdb
+runtimeInfra/*
+!runtimeInfra/.gitkeep

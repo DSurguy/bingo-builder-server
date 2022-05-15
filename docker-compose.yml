@@ -8,6 +8,10 @@ services:
     image: postgres:14-alpine
     volumes:
       - "${DB_PATH}:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_USER="${DB_USER}"
+      - POSTGRES_PASSWORD="${DB_PASSWORD}"
+    ports: 5432:5432
   bingo-nginx:
     image: nginx:mainline-alpine
     ports:
@@ -15,12 +19,12 @@ services:
       - 443:443
     restart: unless-stopped
     volumes:
-      - ./nginx/conf/:/etc/nginx/conf.d/:ro
-      - ./certbot/www:/var/www/certbot/:ro
-      - ./certbot/conf/:/etc/nginx/ssl/:ro
+      - ./nginx.conf/:/etc/nginx/conf.d/:ro
+      - ./runtimeInfra/certbot/www:/var/www/certbot/:ro
+      - ./runtimeInfra/certbot/conf/:/etc/nginx/ssl/:ro
   bingo-certbot:
     image: certbot/certbot:latest
     volumes:
-      - ./certbot/www/:/var/www/certbot/:rw
-      - ./certbot/conf/:/etc/letsencrypt/:rw
+      - ./runtimeInfra/certbot/www/:/var/www/certbot/:rw
+      - ./runtimeInfra/certbot/conf/:/etc/letsencrypt/:rw
     command: certonly --webroot -w /var/www/certbot --force-renewal --email ${CERTBOT_EMAIL} -d ${APP_HOST} --agree-tos
